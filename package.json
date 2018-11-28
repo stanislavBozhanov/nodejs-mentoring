@@ -4,7 +4,7 @@
   "description": "Homework 1 from nodejs mentoring course",
   "main": "app.js",
   "scripts": {
-    "build": "babel app.js --out-dir dist --presets=@babel/env",
+    "build": "babel src --out-dir dist --presets=@babel/env",
     "start": "npm run build && nodemon dist/app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -14,7 +14,6 @@
     "@babel/cli": "^7.1.5",
     "@babel/core": "^7.1.6",
     "@babel/preset-env": "^7.1.6",
-    "@babel/register": "^7.0.0",
     "nodemon": "^1.18.6"
   }
 }
