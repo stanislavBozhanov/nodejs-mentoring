@@ -11,30 +11,60 @@ class DirWatcher extends EventEmitter {
   }
 
   // Takes absolute path and returns hash string
-  getFileHash(filename) {
+  getFileHash(filename, callback) {
     const hash = crypto.createHash('sha256');
-    const data = fs.readFileSync(filename);
-    hash.update(data);
-    return hash.digest('hex');
+    fs.readFile(filename, function(err, data) {
+      if (err)
+        return callback(err);
+
+      hash.update(data);
+      callback(null, hash.digest('hex'));
+    });
   }
 
   // Sets this.files
-  setFileHashes(path) {
-    fs.readdirSync(path).forEach(file => this.files[file] = this.getFileHash(p.join(path, file)))
+  setFileHashes(path, callback) {
+    const self = this;
+    fs.readdir(path, function (err, files) {
+      if (err)
+        console.log(err);
+
+
+      let count = files.length;
+      files.forEach(file => {
+        self.getFileHash(p.join(path, file), function(err, data) {
+          if (err)
+            console.log(err);
+
+          self.files[file] = data;
+          count--;
+          if (!count)
+            callback();
+        });
+      });
+    })
   }
 
   watch(path, delay) {
-    this.setFileHashes(path);
-    setInterval(() => {
-      fs.readdirSync(path).forEach(file => {
-        let hash = this.getFileHash(p.join(path, file));
-        if (this.files[file] !== hash) {
-          this.emit('changed');
-          console.log('changed');
-          this.files[file] = hash;
-        }
-      })
-    }, delay)
+    const self = this;
+    self.setFileHashes(path, function(err) {
+      if (err)
+        console.log(err);
+
+      setInterval(() => {
+        fs.readdir(path, function(err, files) {
+          files.forEach(file => {
+            self.getFileHash(p.join(path, file), function(err, hash) {
+              if (self.files[file] !== hash) {
+                self.emit('changed');
+                console.log('changed');
+                self.files[file] = hash;
+              }
+            })
+          })
+        })
+      }, delay)
+    });
   }
 }
 
